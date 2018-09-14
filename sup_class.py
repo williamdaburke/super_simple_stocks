@@ -1,16 +1,17 @@
-from __future__ import division
-from user_commands import *
+rom __future__ import division
+from utils import *
 
+from scipy.stats.mstats import gmean
 import datetime
 import time
 import pandas as pd
+import numpy as np
+np.seterr(divide='ignore', invalid='ignore')
 
 class Stock_Portfolio_Tool:
   def __init__(self,stocks_csv='data/stocks.csv'):
-    self.stock_dict = {}
-    self.portfolio_df = 1
     self.load_stocks(stocks_csv)
-    self.transaction_columns = ['Execution Time','Indicator','Symbol','Shares','Price']
+    self.transaction_columns = ['Execution Time','Indicator','Symbol','Volume','Price']
     self.transactions_df = pd.DataFrame(columns=self.transaction_columns)
 
   def load_stocks(self,file_name):
@@ -19,22 +20,36 @@ class Stock_Portfolio_Tool:
     self.portfolio_df['VWSP'] = 0
     
   def get_vwsp(self,symb):
-    return 10
-  
+    five_min_ago = datetime.datetime.now() - datetime.timedelta(minutes=5)
+    self.transactions_df['Execution Time'] = pd.to_datetime(self.transactions_df['Execution Time']) 
+    df = self.transactions_df.loc[(self.transactions_df['Execution Time'] >= five_min_ago) & (self.transactions_df['Symbol'] == symb)]
+    try:
+        return float((df["Price"] * df["Volume"]).sum() / df["Volume"].sum())
+    except ZeroDivisionError:
+        return df["Price"].mean()
+    
   def refresh_portfolio(self):
     for index, stock_row in self.portfolio_df.iterrows():
       self.portfolio_df.at[index,'VWSP'] = lastp
-  
-  def get_a_pe_ratio(self,stock_symbol,price):
-    return self.stock_dict[stock_symbol.upper()].p_e_ratio(price)
+
+  def get_GBCE_all_share_index():
+    return gmean(self.portfolio_df.loc[:,"VWSP"])
+
+  def get_a_dividend_yield(self,stock_symbol,price):
+    if self.portfolio_df.at[stock_symbol,'Type'] == 'Common':
+        dividend = self.portfolio_df.at[stock_symbol,'Last Dividend']
+    else:
+        dividend = self.portfolio_df.at[stock_symbol,'Fixed Dividend'] * self.portfolio_df.at[stock_symbol,'Par Value']
+    return format(dividend / price, '.2f')
 
   def get_a_pe_ratio(self,stock_symbol,price):
-    return self.stock_dict[stock_symbol.upper()].div_yield(price)
+    dividend = self.portfolio_df.at[stock_symbol,'Last Dividend']
+    return format(price / dividend, '.2f')
 
-  def record_a_trade(self,ind,symb,shrs,pr,t_stamp=time.ctime()):
-    self.transactions_df.loc[len(self.transactions_df)] = [t_stamp,ind,symb,shrs,pr]
-    self.portfolio_df.at[index,'Shares'] += shrs if ind == "Buy" else -shrs
-    self.portfolio_df.at[index,'VWSP'] = self.get_vwsp(symb)
+  def record_a_trade(self,ind,symb,vol,pr,t_stamp=time.ctime()):
+    self.transactions_df.loc[len(self.transactions_df)] = [t_stamp,ind,symb,vol,pr]
+    self.portfolio_df.at[symb,'Shares'] += vol if ind == "Buy" else -vol
+    self.portfolio_df.at[symb,'VWSP'] = self.get_vwsp(symb)
     
     
     
