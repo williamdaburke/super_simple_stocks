@@ -1,13 +1,12 @@
 from __future__ import division
-from stock import Stock
 from user_commands import *
 
 import datetime
 import time
 import pandas as pd
 
-class SPTool:
-  def __init__(self,stocks_csv='stocks.csv'):
+class Stock_Portfolio_Tool:
+  def __init__(self,stocks_csv='data/stocks.csv'):
     self.stock_dict = {}
     self.portfolio_df = 1
     self.load_stocks(stocks_csv)
@@ -16,8 +15,6 @@ class SPTool:
 
   def load_stocks(self,file_name):
     self.portfolio_df = pd.read_csv(file_name, sep=',',index_col='Symbol')
-    for index, row in self.portfolio_df.iterrows():
-      self.stock_dict[row['Symbol']] = Stock(row)
     self.portfolio_df['Shares'] = 0
     self.portfolio_df['VWSP'] = 0
     
