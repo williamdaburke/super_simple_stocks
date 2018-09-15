@@ -1,4 +1,4 @@
-rom __future__ import division
+from __future__ import division
 from utils import *
 
 from scipy.stats.mstats import gmean
@@ -27,11 +27,7 @@ class Stock_Portfolio_Tool:
         return float((df["Price"] * df["Volume"]).sum() / df["Volume"].sum())
     except ZeroDivisionError:
         return df["Price"].mean()
-    
-  def refresh_portfolio(self):
-    for index, stock_row in self.portfolio_df.iterrows():
-      self.portfolio_df.at[index,'VWSP'] = lastp
-
+  
   def get_GBCE_all_share_index():
     return gmean(self.portfolio_df.loc[:,"VWSP"])
 
